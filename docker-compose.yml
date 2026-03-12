@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       HOME: /home/node
       TERM: xterm-256color
@@ -41,6 +43,11 @@ services:
       - |
         mkdir -p /home/node/.openclaw /home/node/.openclaw/workspace
         if [ ! -f /home/node/.openclaw/openclaw.json ]; then
+          if [ ! -w /home/node/.openclaw ]; then
+            echo "Config mount /home/node/.openclaw is not writable by the container user." >&2
+            echo "Fix host permissions or provide .openclaw/openclaw.json before starting the stack." >&2
+            exit 1
+          fi
           cat >/home/node/.openclaw/openclaw.json <<EOF
         {
           "models": {
@@ -92,6 +99,8 @@ services:
   openclaw-cli:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     network_mode: "service:openclaw-gateway"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     cap_drop:
       - NET_RAW
       - NET_ADMIN
