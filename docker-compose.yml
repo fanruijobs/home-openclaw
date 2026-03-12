@@ -19,6 +19,13 @@ services:
       OPENCLAW_OLLAMA_MODEL: ${OPENCLAW_OLLAMA_MODEL:-gpt-oss:20b}
       OPENCLAW_OLLAMA_MODEL_NAME: ${OPENCLAW_OLLAMA_MODEL_NAME:-GPT-OSS 20B}
       OPENCLAW_OLLAMA_CONTEXT_WINDOW: ${OPENCLAW_OLLAMA_CONTEXT_WINDOW:-8192}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_USE_SSL: ${SMTP_USE_SSL:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-}
       OPENCLAW_CONFIG_DIR: /home/node/.openclaw
       OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
     volumes:
@@ -43,6 +50,9 @@ services:
       - |
         mkdir -p /home/node/.openclaw /home/node/.openclaw/workspace
         if [ ! -f /home/node/.openclaw/openclaw.json ]; then
+          if [ -f /app/config/openclaw.json ]; then
+            cp /app/config/openclaw.json /home/node/.openclaw/openclaw.json
+          else
           if [ ! -w /home/node/.openclaw ]; then
             echo "Config mount /home/node/.openclaw is not writable by the container user." >&2
             echo "Fix host permissions or provide .openclaw/openclaw.json before starting the stack." >&2
@@ -81,6 +91,7 @@ services:
           }
         }
         EOF
+          fi
         fi
         exec node dist/index.js gateway --bind "${OPENCLAW_GATEWAY_BIND:-lan}" --port 18789
     healthcheck:
@@ -114,6 +125,13 @@ services:
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
       OLLAMA_API_KEY: ${OLLAMA_API_KEY:-ollama-local}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_USE_SSL: ${SMTP_USE_SSL:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-}
       OPENCLAW_CONFIG_DIR: /home/node/.openclaw
       OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
     volumes:
