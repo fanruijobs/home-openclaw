@@ -91,9 +91,6 @@ services:
 
   openclaw-cli:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
-    build:
-      context: .
-      dockerfile: Dockerfile
     network_mode: "service:openclaw-gateway"
     cap_drop:
       - NET_RAW
