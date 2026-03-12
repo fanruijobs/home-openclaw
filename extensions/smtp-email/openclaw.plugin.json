@@ -1,0 +1,42 @@
+{
+  "id": "smtp-email",
+  "name": "SMTP Email",
+  "description": "Send outbound email through SMTP as a first-class OpenClaw tool.",
+  "uiHints": {
+    "host": {
+      "label": "SMTP Host"
+    },
+    "port": {
+      "label": "SMTP Port"
+    },
+    "username": {
+      "label": "SMTP Username"
+    },
+    "password": {
+      "label": "SMTP Password",
+      "sensitive": true
+    },
+    "from": {
+      "label": "From Address"
+    },
+    "useSsl": {
+      "label": "Use SSL"
+    },
+    "useTls": {
+      "label": "Use STARTTLS"
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "host": { "type": "string" },
+      "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+      "username": { "type": "string" },
+      "password": { "type": "string" },
+      "from": { "type": "string" },
+      "useSsl": { "type": "boolean" },
+      "useTls": { "type": "boolean" }
+    }
+  }
+}

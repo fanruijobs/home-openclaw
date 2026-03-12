@@ -1,6 +1,9 @@
 services:
   openclaw-gateway:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
       HOME: /home/node
       TERM: xterm-256color
@@ -9,9 +12,16 @@ services:
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-ollama-local}
+      OPENCLAW_OLLAMA_BASE_URL: ${OPENCLAW_OLLAMA_BASE_URL:-http://192.168.31.191:11434}
+      OPENCLAW_OLLAMA_MODEL: ${OPENCLAW_OLLAMA_MODEL:-gpt-oss:20b}
+      OPENCLAW_OLLAMA_MODEL_NAME: ${OPENCLAW_OLLAMA_MODEL_NAME:-GPT-OSS 20B}
+      OPENCLAW_OLLAMA_CONTEXT_WINDOW: ${OPENCLAW_OLLAMA_CONTEXT_WINDOW:-8192}
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
     volumes:
-      - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
-      - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
+      - ${OPENCLAW_CONFIG_DIR:-./.openclaw}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR:-./.openclaw/workspace}:/home/node/.openclaw/workspace
       ## Uncomment the lines below to enable sandbox isolation
       ## (agents.defaults.sandbox). Requires Docker CLI in the image
       ## (build with --build-arg OPENCLAW_INSTALL_DOCKER_CLI=1) or use
@@ -26,15 +36,46 @@ services:
     init: true
     restart: unless-stopped
     command:
-      [
-        "node",
-        "dist/index.js",
-        "gateway",
-        "--bind",
-        "${OPENCLAW_GATEWAY_BIND:-lan}",
-        "--port",
-        "18789",
-      ]
+      - sh
+      - -lc
+      - |
+        mkdir -p /home/node/.openclaw /home/node/.openclaw/workspace
+        if [ ! -f /home/node/.openclaw/openclaw.json ]; then
+          cat >/home/node/.openclaw/openclaw.json <<EOF
+        {
+          "models": {
+            "providers": {
+              "ollama": {
+                "api": "ollama",
+                "baseUrl": "${OPENCLAW_OLLAMA_BASE_URL}",
+                "apiKey": "${OLLAMA_API_KEY}",
+                "models": [
+                  {
+                    "id": "${OPENCLAW_OLLAMA_MODEL}",
+                    "name": "${OPENCLAW_OLLAMA_MODEL_NAME}",
+                    "reasoning": false,
+                    "input": ["text"],
+                    "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+                    "contextWindow": ${OPENCLAW_OLLAMA_CONTEXT_WINDOW},
+                    "maxTokens": ${OPENCLAW_OLLAMA_CONTEXT_WINDOW}0
+                  }
+                ]
+              }
+            }
+          },
+          "agents": {
+            "defaults": {
+              "model": { "primary": "ollama/${OPENCLAW_OLLAMA_MODEL}" }
+            }
+          },
+          "gateway": {
+            "mode": "local",
+            "bind": "${OPENCLAW_GATEWAY_BIND:-lan}"
+          }
+        }
+        EOF
+        fi
+        exec node dist/index.js gateway --bind "${OPENCLAW_GATEWAY_BIND:-lan}" --port 18789
     healthcheck:
       test:
         [
@@ -50,6 +91,9 @@ services:
 
   openclaw-cli:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
     network_mode: "service:openclaw-gateway"
     cap_drop:
       - NET_RAW
@@ -65,9 +109,12 @@ services:
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-ollama-local}
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
     volumes:
-      - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
-      - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
+      - ${OPENCLAW_CONFIG_DIR:-./.openclaw}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR:-./.openclaw/workspace}:/home/node/.openclaw/workspace
     stdin_open: true
     tty: true
     init: true

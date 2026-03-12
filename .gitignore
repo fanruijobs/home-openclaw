@@ -91,6 +91,7 @@ USER.md
 
 # Agent credentials and memory (NEVER COMMIT)
 /memory/
+.openclaw/
 .agent/*.json
 !.agent/workflows/
 /local/
@@ -121,3 +122,7 @@ dist/protocol.schema.json
 
 # Synthing
 **/.stfolder/
+
+# Local Python artifacts
+venv/
+src/UNKNOWN.egg-info/

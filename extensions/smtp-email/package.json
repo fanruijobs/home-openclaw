@@ -1,0 +1,12 @@
+{
+  "name": "@openclaw/smtp-email",
+  "version": "2026.3.9",
+  "private": true,
+  "description": "OpenClaw SMTP email plugin",
+  "type": "module",
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}
